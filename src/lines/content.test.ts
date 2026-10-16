@@ -1,6 +1,6 @@
 // content/lines/*.md 전체 검사. docs/spec/data-format.md 7장(대사 쪽), CLAUDE.md 테스트 규칙.
 // 작가가 대사를 고치면 이 테스트가 누락·형식·금지어를 잡는다.
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { LINE_SOURCES, parseAllLines } from '../content';
 import { BEAT_MAX_CHARS } from '../config';
@@ -72,6 +72,32 @@ describe('대사 파일', () => {
       expect(orphan).toEqual([]);
     });
   }
+
+  // 퍼즐 문서(정본)의 결과 표·이벤트 표에 있는 결과 ID. 아직 구현 안 된 퍼즐도 대사는 미리 검사한다.
+  const docDir = 'docs/puzzles';
+  const docIds = readdirSync(docDir)
+    .filter((f) => /^p\d{2}-.*\.md$/.test(f))
+    .map((f) => ({
+      file: f,
+      prefix: f.slice(0, 3),
+      ids: [...readFileSync(`${docDir}/${f}`, 'utf8').matchAll(/^\|\s*(?:\d+\s*\|\s*)?`?(p\d{2}\.[a-z0-9-]+)`?\s*\|/gm)].map((m) => m[1]!),
+    }));
+
+  for (const d of docIds) {
+    it(`${d.file}: 문서의 모든 결과 ID에 대사가 있고, 문서에 없는 결과의 대사가 없다`, () => {
+      expect(d.ids.length).toBeGreaterThan(0);
+      expect(d.ids.filter((id) => !ids.has(id))).toEqual([]);
+      const known = new Set(d.ids);
+      expect(sets.filter((s) => s.id.startsWith(`${d.prefix}.`) && !s.id.includes('@') && !known.has(s.id)).map((s) => s.id)).toEqual([]);
+    });
+  }
+
+  it('repeat 1 변주가 있는 결과는 2·3회 변주도 있다 (없으면 경고만)', () => {
+    for (const s of sets) {
+      const reps = new Set(s.variants.map((v) => v.repeat));
+      if (reps.has(1) && !(reps.has(2) && reps.has(3))) console.warn(`[lines] ${s.file} ${s.id}: @repeat 1은 있는데 2·3회 변주가 없음`);
+    }
+  });
 
   it('배포 빌드에서는 @todo가 없어야 한다 (JDM_RELEASE=1일 때만 검사)', () => {
     if (process.env.JDM_RELEASE !== '1') return;

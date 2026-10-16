@@ -19,5 +19,8 @@ export const PAUSE_MS = { short: 500, long: 1200 } as const;
 /** 판정 후 첫 비트까지 지연(ms). 300 이하. */
 export const FIRST_BEAT_DELAY_MS = 300;
 
+/** 비트 타이핑 속도(ms/글자). 아주 빠르게(data-format.md 6-3). */
+export const TYPE_MS_PER_CHAR = 20;
+
 /** 비트 하나 최대 글자 수(모바일 두 줄 기준). */
 export const BEAT_MAX_CHARS = 60;
