@@ -38,7 +38,7 @@ export function PuzzleView<S>({ screen, game, debug }: { screen: PuzzleScreen<S>
           <BeatPlayer key={game.speech.serial} beats={game.speech.beats} />
         </div>
       )}
-      {debug && <DebugPanel game={game} puzzle={def} state={state} />}
+      {debug && <DebugPanel game={game} puzzle={def} state={screen.debugView ? screen.debugView(state) : state} />}
     </>
   );
 }

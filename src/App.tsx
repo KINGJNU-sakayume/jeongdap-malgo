@@ -4,12 +4,13 @@ import { isDebug } from './ui/DebugPanel';
 import { PuzzleView } from './ui/PuzzleView';
 import { P02_SCREEN } from './ui/screens/P02Screen';
 import { P04_SCREEN } from './ui/screens/P04Screen';
+import { P06_SCREEN } from './ui/screens/P06Screen';
 import { P07_SCREEN } from './ui/screens/P07Screen';
 import type { PuzzleScreen } from './ui/screens/types';
 import { useGame } from './ui/useGame';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const SCREENS: readonly PuzzleScreen<any>[] = [P02_SCREEN, P04_SCREEN, P07_SCREEN];
+const SCREENS: readonly PuzzleScreen<any>[] = [P02_SCREEN, P04_SCREEN, P06_SCREEN, P07_SCREEN];
 
 export default function App() {
   const game = useGame();
