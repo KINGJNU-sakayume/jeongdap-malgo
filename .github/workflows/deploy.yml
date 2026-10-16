@@ -28,7 +28,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: 테스트 (배포 빌드: @todo 대사 금지)
+      - name: '테스트 (배포 빌드에서는 @todo 대사 금지)'
         run: npm test
         env:
           JDM_RELEASE: '1'
