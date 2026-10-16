@@ -1,6 +1,7 @@
 // P12 도장 화면. 정본: docs/puzzles/p12-stamp.md '화면'.
 import { useRef, useState } from 'react';
 import { P12, P12_B, P12_R, overlapOf, placeOf, poseOf, type P12State } from '../../puzzles/p12';
+import { playStamp } from '../../audio/sfx';
 import { PlaceWidget } from '../../widgets/PlaceWidget';
 import { CLERK_ICON_TARGET } from '../ClerkIcon';
 import { FORM_H, FormPaper, PaperTitle, rectStyle } from '../FormPaper';
@@ -33,9 +34,14 @@ function P12Screen({ state, setState, onSubmit }: ScreenProps<P12State>) {
         r={P12_R}
         rot={rot}
         onRotate={setRot}
-        onPlace={(p, r) => setState((s) => ({ ...s, marks: [...s.marks, { x: p.x, y: p.y, rot: r }] }))}
+        onPlace={(p, r) => {
+          playStamp(state.marks.length + state.clerkMarks + 1);
+          setState((s) => ({ ...s, marks: [...s.marks, { x: p.x, y: p.y, rot: r }] }));
+        }}
         onTarget={(t) => {
-          if (t === CLERK_ICON_TARGET) setState((s) => ({ ...s, clerkMarks: s.clerkMarks + 1 }));
+          if (t !== CLERK_ICON_TARGET) return;
+          playStamp(state.marks.length + state.clerkMarks + 1);
+          setState((s) => ({ ...s, clerkMarks: s.clerkMarks + 1 }));
         }}
       />
       <div className="flex justify-end">
