@@ -84,6 +84,9 @@ export function parseLines(src: string, file: string): { sets: LineSet[]; errors
     if (block.beats.length === 0 && !block.cond?.todo) {
       err(block.start, '조건 줄 뒤에 비트가 없음');
     } else {
+      // 마지막 비트의 정지 표시는 무시한다(puzzle-authoring.md 5장).
+      const last = block.beats[block.beats.length - 1];
+      if (last) last.pause = 'short';
       cur.variants.push({ ...(block.cond ?? {}), beats: block.beats, line: block.start });
     }
     block = null;

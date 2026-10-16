@@ -50,9 +50,15 @@ describe('대사 파서', () => {
   });
 
   it('CRLF도 읽는다', () => {
-    const { sets, errors } = parseLines('## @a\r\n\r\n하나\r\n둘 //\r\n', 't.md');
+    const { sets, errors } = parseLines('## @a\r\n\r\n하나 //\r\n둘\r\n', 't.md');
     expect(errors).toEqual([]);
-    expect(sets[0]!.variants[0]!.beats[1]!.pause).toBe('long');
+    expect(sets[0]!.variants[0]!.beats[0]!.pause).toBe('long');
+  });
+
+  it('마지막 비트의 정지 표시는 무시한다', () => {
+    const { sets } = parseLines('## @a\n\n하나 //\n둘 //\n\n@repeat 2\n셋 //', 't.md');
+    expect(sets[0]!.variants[0]!.beats.map((b) => b.pause)).toEqual(['long', 'short']);
+    expect(sets[0]!.variants[1]!.beats.map((b) => b.pause)).toEqual(['short']);
   });
 
   it('@todo만 있는 묶음은 기본 변주로 허용', () => {
