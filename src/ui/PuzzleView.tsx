@@ -1,12 +1,12 @@
 // 퍼즐 한 번 진입. 마운트 = 진입(재진입은 부모가 key를 바꿔 새로 마운트).
 // 상태가 바뀔 때마다 이벤트를 검사한다(제출 없이 터진다).
 import { useEffect, useRef, useState } from 'react';
-import { BeatPlayer } from './BeatPlayer';
+import { SpeechBar } from './SpeechBar';
 import { DebugPanel } from './DebugPanel';
 import type { PuzzleScreen } from './screens/types';
 import type { Game } from './useGame';
 
-export function PuzzleView<S>({ screen, game, debug }: { screen: PuzzleScreen<S>; game: Game; debug: boolean }) {
+export function PuzzleView<S>({ screen, game, debug, onBack }: { screen: PuzzleScreen<S>; game: Game; debug: boolean; onBack(): void }) {
   const { def, Screen } = screen;
   const [state, setState] = useState<S>(def.initial);
 
@@ -31,14 +31,15 @@ export function PuzzleView<S>({ screen, game, debug }: { screen: PuzzleScreen<S>
 
   return (
     <>
+      <div>
+        <button type="button" onClick={onBack} className="rounded-sm border border-rule bg-white px-3 py-1.5 text-sm">
+          ← 대기석
+        </button>
+      </div>
       <Screen state={state} setState={setState} onSubmit={submit} />
       {/* 서식이 화면보다 길어도(P07) 대사가 보이도록 화면 아래에 붙인다. */}
-      {game.speech && (
-        <div className="sticky bottom-2 z-10">
-          <BeatPlayer key={game.speech.serial} beats={game.speech.beats} />
-        </div>
-      )}
-      {debug && <DebugPanel game={game} puzzle={def} state={state} />}
+      <SpeechBar game={game} clerkMarks={screen.clerkMarks?.(state) ?? 0} />
+      {debug && <DebugPanel game={game} puzzle={def} state={screen.debugView ? screen.debugView(state) : state} />}
     </>
   );
 }

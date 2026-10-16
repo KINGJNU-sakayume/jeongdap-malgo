@@ -60,6 +60,10 @@ describe('대사 파일', () => {
     for (const n of [1, 2, 3, 4, 5]) expect(ids.has(`@stage-up.${n}`)).toBe(true);
   });
 
+  it('대기석 공용 대사가 있다', () => {
+    for (const id of ['@hub.enter', '@hub.all-ok', '@hub.seal']) expect(ids.has(id)).toBe(true);
+  });
+
   for (const p of PUZZLES) {
     it(`${p.id}: 모든 결과와 진입에 대사가 있다`, () => {
       const need = [`${p.prefix}.@enter`, ...p.rules.map((r) => r.outcome), ...(p.events ?? []).map((e) => e.outcome)];

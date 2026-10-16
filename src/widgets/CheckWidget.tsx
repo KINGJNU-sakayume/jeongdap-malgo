@@ -1,5 +1,6 @@
 // check 위젯 한 칸. □ 와 ✓. 라벨까지 눌러도 토글된다.
 import type { ReactNode } from 'react';
+import { playClick } from '../audio/sfx';
 
 export interface CheckWidgetProps {
   checked: boolean;
@@ -13,7 +14,10 @@ export function CheckWidget({ checked, onToggle, children }: CheckWidgetProps) {
       type="button"
       role="checkbox"
       aria-checked={checked}
-      onClick={onToggle}
+      onClick={() => {
+        playClick(); // 체크 상태가 바뀔 때마다 click(전체 동의도 한 번)
+        onToggle();
+      }}
       data-no-margin
       className="inline-flex min-h-11 items-center gap-2 text-left text-[15px]"
     >

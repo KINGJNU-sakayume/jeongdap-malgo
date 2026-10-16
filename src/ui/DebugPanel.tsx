@@ -22,7 +22,7 @@ async function copyText(text: string): Promise<boolean> {
 const btn = 'rounded-sm border border-ink/40 px-2 py-1 text-xs active:bg-ink/10';
 const on = 'bg-ink text-white';
 
-export function DebugPanel<S>({ game, puzzle, state }: { game: Game; puzzle: PuzzleDef<S>; state: S }) {
+export function DebugPanel<S>({ game, puzzle, state }: { game: Game; puzzle: PuzzleDef<S>; state: unknown }) {
   const [open, setOpen] = useState(false);
   const [copyMsg, setCopyMsg] = useState('');
   const [fallback, setFallback] = useState<string | null>(null);

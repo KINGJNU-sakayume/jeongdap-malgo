@@ -12,6 +12,8 @@ import type { Log, OutcomeId } from '../log/types';
 import { respond } from '../lines/respond';
 import type { Beat } from '../lines/types';
 import { allOutcomeClasses } from '../puzzles';
+import { ACHIEVEMENTS, OUTCOME_INDEX } from '../achievementList';
+import { computeAchievements, type AchievementDef } from '../log/achievements';
 
 export interface Speech {
   /** 대사가 바뀔 때마다 증가. BeatPlayer의 key. */
@@ -35,6 +37,13 @@ export interface Game {
   observe<S>(def: PuzzleDef<S>, state: S): void;
   /** 디버그: 판정 없이 결과를 낸다. */
   force<S>(def: PuzzleDef<S>, outcome: OutcomeId): void;
+  /** 방금 열린 업적(알림용). */
+  unlocked: AchievementDef[];
+  dismissUnlocked(id: string): void;
+  /** 퍼즐 밖(대기석) 대사. 공용 대사 ID들을 이어서 말한다. */
+  speak(lineIds: readonly string[]): void;
+  /** 대사 줄 비우기. */
+  hush(): void;
   /** 디버그: 기록 전체 삭제. */
   clearLog(): void;
 }
@@ -57,6 +66,18 @@ export function useGame(): Game {
   const serial = useRef(0);
   /** 이번 진입에서 터진 이벤트. 진입 때 비운다. */
   const fired = useRef(new Set<OutcomeId>());
+  const [unlocked, setUnlocked] = useState<AchievementDef[]>([]);
+  const logRef = useRef<Log>(log);
+
+  /** 덧붙인 기록을 반영하고, 새로 열린 업적을 알림에 넣는다. */
+  const commit = useCallback((next: Log) => {
+    const before = computeAchievements(logRef.current, ACHIEVEMENTS, OUTCOME_INDEX);
+    const after = computeAchievements(next, ACHIEVEMENTS, OUTCOME_INDEX);
+    const fresh = ACHIEVEMENTS.filter((a) => after.has(a.id) && !before.has(a.id));
+    logRef.current = next;
+    setLog(next);
+    if (fresh.length > 0) setUnlocked((u) => [...u, ...fresh]);
+  }, []);
 
   const say = useCallback(
     (next: Log, lineId: string, repeat: number) => {
@@ -72,21 +93,21 @@ export function useGame(): Game {
       enteredAt.current = Date.now();
       fired.current = new Set();
       const next = store.append({ t: 'enter', at: enteredAt.current, puzzle: def.id });
-      setLog(next);
+      commit(next);
       say(next, `${def.prefix}.@enter`, 1);
     },
-    [store, say],
+    [store, say, commit],
   );
 
   const record = useCallback(
     (def: PuzzleDef<unknown>, j: Judgement) => {
       const now = Date.now();
       const next = store.append({ t: 'submit', at: now, puzzle: def.id, outcome: j.outcome, also: j.also, ms: now - enteredAt.current });
-      setLog(next);
+      commit(next);
       setLastJudgement(j);
       say(next, j.outcome, lastRepeatIndex(next));
     },
-    [store, say],
+    [store, say, commit],
   );
 
   const submit = useCallback(
@@ -103,10 +124,10 @@ export function useGame(): Game {
     (def: PuzzleDef<unknown>, outcome: OutcomeId) => {
       fired.current.add(outcome);
       const next = store.append({ t: 'event', at: Date.now(), puzzle: def.id, outcome });
-      setLog(next);
+      commit(next);
       say(next, outcome, lastRepeatIndex(next));
     },
-    [store, say],
+    [store, say, commit],
   );
 
   const observe = useCallback(
@@ -125,8 +146,23 @@ export function useGame(): Game {
     [record, fire],
   );
 
+  const speak = useCallback(
+    (lineIds: readonly string[]) => {
+      const beats = lineIds.flatMap(
+        (lineId) => respond({ log: logRef.current, book, lineId, repeat: 1, stageOptions, forcedStage, name: name.current }).beats,
+      );
+      serial.current += 1;
+      setSpeech({ serial: serial.current, beats });
+    },
+    [book, stageOptions, forcedStage],
+  );
+  const hush = useCallback(() => setSpeech(null), []);
+  const dismissUnlocked = useCallback((id: string) => setUnlocked((u) => u.filter((a) => a.id !== id)), []);
+
   const clearLog = useCallback(() => {
-    setLog(store.clear());
+    logRef.current = store.clear();
+    setLog(logRef.current);
+    setUnlocked([]);
     setLastJudgement(null);
     name.current = null;
   }, [store]);
@@ -143,6 +179,10 @@ export function useGame(): Game {
     submit,
     observe,
     force,
+    unlocked,
+    dismissUnlocked,
+    speak,
+    hush,
     clearLog,
   };
 }

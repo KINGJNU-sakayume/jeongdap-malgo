@@ -3,11 +3,13 @@ import type { OutcomeClass, PuzzleDef } from '../engine/types';
 import { outcomeClasses } from '../engine/judge';
 import { P02 } from './p02';
 import { P04 } from './p04';
+import { P06 } from './p06';
 import { P07 } from './p07';
+import { P12 } from './p12';
 
 // 퍼즐마다 상태 타입이 달라서 목록에서는 unknown으로 묶는다.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const PUZZLES: readonly PuzzleDef<any>[] = [P02, P04, P07];
+export const PUZZLES: readonly PuzzleDef<any>[] = [P02, P04, P06, P07, P12];
 
 export function puzzleByPrefix(prefix: string): PuzzleDef<unknown> | undefined {
   return PUZZLES.find((p) => p.prefix === prefix);

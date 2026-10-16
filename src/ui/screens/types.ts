@@ -15,4 +15,8 @@ export interface PuzzleScreen<S> {
   afterSubmit(s: S): S;
   /** 정답일 때 {name}으로 둘 값(P02만). */
   nameOf?(s: S): string;
+  /** 화자 아이콘 이마의 인영 수(P12만). */
+  clerkMarks?(s: S): number;
+  /** 디버그 패널에 보일 상태 요약(기본: 상태 그대로). */
+  debugView?(s: S): unknown;
 }
