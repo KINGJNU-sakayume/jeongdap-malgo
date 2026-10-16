@@ -1,6 +1,6 @@
 # 1차 프로토타입 범위 (1~2주, 퍼즐 5개)
 
-- 상태: 확정 v1 (D-001~D-005 반영)
+- 상태: 확정 v1 (D-001~D-005 반영). 진행: D1~D3 완료(2026-10-16), 이후는 `handoff-prompt.md`
 - 관련: `spec/data-format.md`, `puzzle-authoring.md`, `docs/puzzles/`, `content/lines/`
 - 일정은 하루 순수 작업 5~6시간 기준 **[추측]**.
 
