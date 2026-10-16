@@ -2,6 +2,7 @@
 // 상태가 바뀔 때마다 이벤트를 검사한다(제출 없이 터진다).
 import { useEffect, useRef, useState } from 'react';
 import { BeatPlayer } from './BeatPlayer';
+import { ClerkIcon } from './ClerkIcon';
 import { DebugPanel } from './DebugPanel';
 import type { PuzzleScreen } from './screens/types';
 import type { Game } from './useGame';
@@ -33,11 +34,10 @@ export function PuzzleView<S>({ screen, game, debug }: { screen: PuzzleScreen<S>
     <>
       <Screen state={state} setState={setState} onSubmit={submit} />
       {/* 서식이 화면보다 길어도(P07) 대사가 보이도록 화면 아래에 붙인다. */}
-      {game.speech && (
-        <div className="sticky bottom-2 z-10">
-          <BeatPlayer key={game.speech.serial} beats={game.speech.beats} />
-        </div>
-      )}
+      <div className="sticky bottom-2 z-10 flex items-end gap-2">
+        <ClerkIcon marks={screen.clerkMarks?.(state) ?? 0} />
+        <div className="min-w-0 flex-1">{game.speech && <BeatPlayer key={game.speech.serial} beats={game.speech.beats} />}</div>
+      </div>
       {debug && <DebugPanel game={game} puzzle={def} state={screen.debugView ? screen.debugView(state) : state} />}
     </>
   );
