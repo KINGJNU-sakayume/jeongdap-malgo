@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { COOL_STREAK, STAGE_CAP_PROTOTYPE, STAGE_THRESHOLDS } from '../config';
 import { loadLineBook } from '../content';
-import { judge } from '../engine/judge';
+import { checkEvents, judge } from '../engine/judge';
 import type { Judgement, PuzzleDef } from '../engine/types';
 import { lastRepeatIndex } from '../log/derive';
 import type { StageOptions } from '../log/stage';
@@ -31,6 +31,8 @@ export interface Game {
   enter<S>(def: PuzzleDef<S>): void;
   /** 제출. 판정 → 기록 → 대사. nameIfCorrect는 정답일 때만 {name}으로 세션 메모리에 둔다. */
   submit<S>(def: PuzzleDef<S>, state: S, nameIfCorrect?: string): Judgement;
+  /** 상태가 바뀔 때마다. 이번 진입에서 아직 안 터진 이벤트를 터뜨린다(제출 없이). */
+  observe<S>(def: PuzzleDef<S>, state: S): void;
   /** 디버그: 판정 없이 결과를 낸다. */
   force<S>(def: PuzzleDef<S>, outcome: OutcomeId): void;
   /** 디버그: 기록 전체 삭제. */
@@ -53,6 +55,8 @@ export function useGame(): Game {
   const name = useRef<string | null>(null);
   const enteredAt = useRef(0);
   const serial = useRef(0);
+  /** 이번 진입에서 터진 이벤트. 진입 때 비운다. */
+  const fired = useRef(new Set<OutcomeId>());
 
   const say = useCallback(
     (next: Log, lineId: string, repeat: number) => {
@@ -66,6 +70,7 @@ export function useGame(): Game {
   const enter = useCallback(
     <S,>(def: PuzzleDef<S>) => {
       enteredAt.current = Date.now();
+      fired.current = new Set();
       const next = store.append({ t: 'enter', at: enteredAt.current, puzzle: def.id });
       setLog(next);
       say(next, `${def.prefix}.@enter`, 1);
@@ -94,12 +99,30 @@ export function useGame(): Game {
     [record],
   );
 
+  const fire = useCallback(
+    (def: PuzzleDef<unknown>, outcome: OutcomeId) => {
+      fired.current.add(outcome);
+      const next = store.append({ t: 'event', at: Date.now(), puzzle: def.id, outcome });
+      setLog(next);
+      say(next, outcome, lastRepeatIndex(next));
+    },
+    [store, say],
+  );
+
+  const observe = useCallback(
+    <S,>(def: PuzzleDef<S>, state: S) => {
+      for (const id of checkEvents(def, state, fired.current)) fire(def as PuzzleDef<unknown>, id);
+    },
+    [fire],
+  );
+
   const force = useCallback(
     <S,>(def: PuzzleDef<S>, outcome: OutcomeId) => {
+      if (def.events?.some((e) => e.outcome === outcome)) return fire(def as PuzzleDef<unknown>, outcome);
       const rule = def.rules.find((r) => r.outcome === outcome);
       record(def as PuzzleDef<unknown>, { outcome, kind: rule?.kind ?? 'wrong', also: [] });
     },
-    [record],
+    [record, fire],
   );
 
   const clearLog = useCallback(() => {
@@ -118,6 +141,7 @@ export function useGame(): Game {
     setForcedStage,
     enter,
     submit,
+    observe,
     force,
     clearLog,
   };

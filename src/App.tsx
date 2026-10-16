@@ -1,35 +1,44 @@
-// D4: P02 화면 하나. 대기석은 D9.
-import { useEffect, useRef, useState } from 'react';
-import { P02, type P02State } from './puzzles/p02';
-import { BeatPlayer } from './ui/BeatPlayer';
-import { DebugPanel, isDebug } from './ui/DebugPanel';
-import { P02Screen } from './ui/screens/P02Screen';
+// 서식 화면. 대기석은 D9 — 그 전까지는 위쪽 탭으로 서식을 고른다(임시).
+import { useState } from 'react';
+import { isDebug } from './ui/DebugPanel';
+import { PuzzleView } from './ui/PuzzleView';
+import { P02_SCREEN } from './ui/screens/P02Screen';
+import { P04_SCREEN } from './ui/screens/P04Screen';
+import { P07_SCREEN } from './ui/screens/P07Screen';
+import type { PuzzleScreen } from './ui/screens/types';
 import { useGame } from './ui/useGame';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SCREENS: readonly PuzzleScreen<any>[] = [P02_SCREEN, P04_SCREEN, P07_SCREEN];
 
 export default function App() {
   const game = useGame();
-  const [p02, setP02] = useState<P02State>(P02.initial);
   const [debug] = useState(() => isDebug());
+  const [current, setCurrent] = useState(0);
+  // 같은 서식을 다시 눌러도 재진입(새 진입 기록, 이번 진입 상태 초기화)
+  const [visit, setVisit] = useState(0);
+  const screen = SCREENS[current]!;
 
-  // StrictMode에서 effect가 두 번 돌아도 진입은 한 번만 기록한다.
-  const entered = useRef(false);
-  const { enter } = game;
-  useEffect(() => {
-    if (entered.current) return;
-    entered.current = true;
-    enter(P02);
-  }, [enter]);
-
-  const submit = (s: P02State) => {
-    game.submit(P02, s, s.text);
-    setP02(P02.initial); // 원시 입력은 판정 후 버린다
+  const open = (i: number) => {
+    setCurrent(i);
+    setVisit((v) => v + 1);
   };
 
   return (
     <main className="mx-auto flex min-h-full max-w-md flex-col gap-4 px-4 py-6">
-      <P02Screen state={p02} setState={setP02} onSubmit={submit} />
-      {game.speech && <BeatPlayer key={game.speech.serial} beats={game.speech.beats} />}
-      {debug && <DebugPanel game={game} puzzle={P02} state={p02} />}
+      <nav className="flex gap-1 text-sm">
+        {SCREENS.map((s, i) => (
+          <button
+            key={s.def.id}
+            type="button"
+            onClick={() => open(i)}
+            className={`rounded-sm border px-3 py-1.5 ${i === current ? 'border-ink bg-ink text-white' : 'border-rule bg-white'}`}
+          >
+            {s.def.title}
+          </button>
+        ))}
+      </nav>
+      <PuzzleView key={`${screen.def.id}:${visit}`} screen={screen} game={game} debug={debug} />
     </main>
   );
 }
