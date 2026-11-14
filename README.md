@@ -9,3 +9,16 @@
 - 개발 규칙: [`CLAUDE.md`](CLAUDE.md)
 
 Vite · React · TypeScript · Tailwind · Vitest · GitHub Pages. 서버 없음, 저장은 브라우저 localStorage.
+
+## 개발
+
+```bash
+npm ci
+npm run dev          # 개발 서버
+npm test             # Vitest (test:watch는 변경 감시)
+npm run typecheck    # tsc --noEmit
+npm run build        # 타입 검사 + 빌드
+npm run preview      # 빌드 결과를 로컬에서 확인
+```
+
+`main`에 푸시하면 `.github/workflows/deploy.yml`이 GitHub Pages로 배포합니다 (저장소 Settings → Pages → Source: GitHub Actions).
